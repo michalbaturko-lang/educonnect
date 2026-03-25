@@ -1,239 +1,151 @@
-import { useState } from "react";
-import {
-  LayoutDashboard, MessageSquare, BookOpen, CalendarCheck,
-  GraduationCap, Clock, Bell, ChevronRight, ArrowLeft,
-  Send, Paperclip, Check, CheckCheck, X, AlertCircle,
-  TrendingUp, TrendingDown, Minus, Star, Users, FileText,
-  Menu, Home, Settings, LogOut, Search, Filter, Plus,
-  Calendar, ChevronDown, ChevronUp, Eye, Download
-} from "lucide-react";
+import React, { useState } from "react";
+import { BookOpen, MessageSquare, ClipboardList, Calendar, BarChart3, Clock, ChevronRight, Check, AlertCircle, User, Bell, Menu, X, Home, GraduationCap } from "lucide-react";
 
-// ============================================================
-// MOCK DATA
-// ============================================================
-const STUDENT = { name: "Aneta Novakova", class: "III.A", photo: null };
+const STUDENT = { name: "Tomáš Novák", class: "7.A", school: "ZŠ Gajdošova", avatar: "TN" };
 
 const GRADES = [
-  { subject: "Matematika", abbr: "M", grades: [
-    { value: 1, date: "22.3.", label: "Nasobeni", weight: 1 },
-    { value: 2, date: "15.3.", label: "Scitani do 100", weight: 2 },
-    { value: 1, date: "8.3.", label: "Geometrie", weight: 1 },
-    { value: 3, date: "1.3.", label: "Slovni ulohy", weight: 2 },
-  ], avg: 1.71 },
-  { subject: "Cesky jazyk", abbr: "CJ", grades: [
-    { value: 2, date: "20.3.", label: "Diktovat", weight: 2 },
-    { value: 1, date: "12.3.", label: "Cteni", weight: 1 },
-    { value: 2, date: "5.3.", label: "Mluvnice", weight: 2 },
-  ], avg: 1.80 },
-  { subject: "Anglicky jazyk", abbr: "AJ", grades: [
-    { value: 1, date: "21.3.", label: "Unit 4 test", weight: 2 },
-    { value: 1, date: "14.3.", label: "Slovicka", weight: 1 },
-  ], avg: 1.00 },
-  { subject: "Prirodoveda", abbr: "PRV", grades: [
-    { value: 2, date: "18.3.", label: "Rostliny", weight: 1 },
-  ], avg: 2.00 },
-  { subject: "Vlastiveda", abbr: "VL", grades: [
-    { value: 1, date: "19.3.", label: "Moje mesto", weight: 1 },
-  ], avg: 1.00 },
+  { subject: "Matematika", grade: 1, date: "18.3.", type: "Písemná práce", weight: 2 },
+  { subject: "Český jazyk", grade: 2, date: "15.3.", type: "Diktát", weight: 1 },
+  { subject: "Angličtina", grade: 1, date: "14.3.", type: "Slovíčka", weight: 1 },
+  { subject: "Dějepis", grade: 3, date: "12.3.", type: "Ústní zkoušení", weight: 1 },
+  { subject: "Fyzika", grade: 2, date: "10.3.", type: "Laboratorní práce", weight: 1 },
+  { subject: "Přírodopis", grade: 1, date: "8.3.", type: "Projekt", weight: 2 },
 ];
 
 const HOMEWORK = [
-  { id: 1, subject: "Matematika", title: "PS str. 33, cv. 4 a 5", due: "26.3.", done: false, teacher: "Mgr. Kralova" },
-  { id: 2, subject: "Cesky jazyk", title: "Pisanka - dopsat str. 39", due: "26.3.", done: false, teacher: "Mgr. Kralova" },
-  { id: 3, subject: "Anglicky jazyk", title: "Workbook p. 27-28", due: "28.3.", done: false, teacher: "Mr. George" },
-  { id: 4, subject: "Matematika", title: "Procvicovani nasobilky 2-5", due: "25.3.", done: true, teacher: "Mgr. Kralova" },
-  { id: 5, subject: "Cesky jazyk", title: "Cteni str. 58-64", due: "24.3.", done: true, teacher: "Mgr. Kralova" },
+  { id: 1, subject: "Matematika", title: "Rovnice – cvičení str. 45", due: "Zítra", done: false },
+  { id: 2, subject: "Český jazyk", title: "Slohová práce – popis osoby", due: "Čt 21.3.", done: false },
+  { id: 3, subject: "Angličtina", title: "Workbook str. 32-33", due: "Pá 22.3.", done: true },
+  { id: 4, subject: "Fyzika", title: "Příklady na sílu a tlak", due: "Po 25.3.", done: false },
+  { id: 5, subject: "Dějepis", title: "Referát – průmyslová revoluce", due: "Út 26.3.", done: false },
 ];
 
 const MESSAGES = [
-  { id: 1, from: "Mgr. Kralova", role: "Tridni ucitelka", time: "dnes 7:30", subject: "Akce na brezen", preview: "Dobry den, posilam prehled akci na brezen...", unread: true, avatar: "KR" },
-  { id: 2, from: "Vedeni skoly", role: "Reditelstvi", time: "vcera", subject: "Platba skoly v prirode", preview: "Prosime o uhrazeni platby do konce dubna...", unread: true, avatar: "VS" },
-  { id: 3, from: "Mr. George", role: "Ucitel AJ", time: "po 22.3.", subject: "Unit 4 - vysledky testu", preview: "Aneta napsala test na jednicku, gratuluji...", unread: false, avatar: "GE" },
-  { id: 4, from: "Mgr. Kralova", role: "Tridni ucitelka", time: "pa 20.3.", subject: "Foceni trid", preview: "V utery 25.3. probehne foceni trid...", unread: false, avatar: "KR" },
+  { id: 1, from: "Mgr. Petra Svobodová", subject: "Třídní schůzky 28.3.", preview: "Vážení rodiče, zveme vás na třídní schůzky...", time: "Dnes 8:30", unread: true, body: "Vážení rodiče, zveme vás na třídní schůzky, které se konají dne 28.3.2026 od 16:00 v budově školy. Prosím o potvrzení účasti. S pozdravem, Mgr. Petra Svobodová" },
+  { id: 2, from: "Mgr. Jan Dvořák", subject: "Výsledky písemné práce z matematiky", preview: "Dobrý den, zasílám výsledky písemky...", time: "Včera", unread: true, body: "Dobrý den, zasílám výsledky písemné práce z matematiky. Tomáš dosáhl výborného výsledku 48/50 bodů. Gratulujeme! S pozdravem, Mgr. Jan Dvořák" },
+  { id: 3, from: "Systém EduConnect", subject: "Nová známka z angličtiny", preview: "Byla zadána nová známka: Angličtina – 1...", time: "14.3.", unread: false, body: "Byla zadána nová známka: Angličtina – 1 (Slovíčka). Vyučující: Mgr. Lucie Malá." },
+  { id: 4, from: "Mgr. Lucie Malá", subject: "Školní výlet – informace", preview: "Milí rodiče, ráda bych vás informovala o chystaném výletu...", time: "12.3.", unread: false, body: "Milí rodiče, ráda bych vás informovala o chystaném školním výletu do Brna, který se uskuteční 5.4.2026. Cena je 350 Kč. Prosím o potvrzení účasti do 25.3." },
 ];
 
-const ATTENDANCE = [
-  { date: "25.3.", day: "Ut", status: "present", hours: "1.-5.", note: null },
-  { date: "24.3.", day: "Po", status: "present", hours: "1.-5.", note: null },
-  { date: "21.3.", day: "Pa", status: "present", hours: "1.-5.", note: null },
-  { date: "20.3.", day: "Ct", status: "late", hours: "1.-5.", note: "Pozdni prichod 8:12" },
-  { date: "19.3.", day: "St", status: "absent", hours: "1.-5.", note: "Nemoc - omluveno" },
-  { date: "18.3.", day: "Ut", status: "absent", hours: "1.-5.", note: "Nemoc - omluveno" },
-  { date: "17.3.", day: "Po", status: "absent", hours: "1.-5.", note: "Nemoc - omluveno" },
-  { date: "14.3.", day: "Pa", status: "present", hours: "1.-5.", note: null },
-];
-
-const SCHEDULE = {
-  "Po": [
-    { hour: 1, time: "8:00-8:45", subject: "Cesky jazyk", teacher: "Kralova", room: "III.A" },
-    { hour: 2, time: "8:55-9:40", subject: "Matematika", teacher: "Kralova", room: "III.A" },
-    { hour: 3, time: "10:00-10:45", subject: "Anglicky jazyk", teacher: "George", room: "JAZ1" },
-    { hour: 4, time: "10:55-11:40", subject: "Prirodoveda", teacher: "Kralova", room: "III.A" },
-    { hour: 5, time: "11:50-12:35", subject: "Telesna vychova", teacher: "Novak", room: "TV" },
-  ],
-  "Ut": [
-    { hour: 1, time: "8:00-8:45", subject: "Matematika", teacher: "Kralova", room: "III.A" },
-    { hour: 2, time: "8:55-9:40", subject: "Cesky jazyk", teacher: "Kralova", room: "III.A" },
-    { hour: 3, time: "10:00-10:45", subject: "Vlastiveda", teacher: "Kralova", room: "III.A" },
-    { hour: 4, time: "10:55-11:40", subject: "Hudebni vychova", teacher: "Kralova", room: "HV" },
-    { hour: 5, time: "11:50-12:35", subject: "Vytv. vychova", teacher: "Kralova", room: "VV" },
-  ],
-  "St": [
-    { hour: 1, time: "8:00-8:45", subject: "Cesky jazyk", teacher: "Kralova", room: "III.A" },
-    { hour: 2, time: "8:55-9:40", subject: "Matematika", teacher: "Kralova", room: "III.A" },
-    { hour: 3, time: "10:00-10:45", subject: "Anglicky jazyk", teacher: "George", room: "JAZ1" },
-    { hour: 4, time: "10:55-11:40", subject: "Informatika", teacher: "Horak", room: "PC1" },
-    { hour: 5, time: "11:50-12:35", subject: "Pracovni cin.", teacher: "Kralova", room: "III.A" },
-  ],
-  "Ct": [
-    { hour: 1, time: "8:00-8:45", subject: "Matematika", teacher: "Kralova", room: "III.A" },
-    { hour: 2, time: "8:55-9:40", subject: "Cesky jazyk", teacher: "Kralova", room: "III.A" },
-    { hour: 3, time: "10:00-10:45", subject: "Prirodoveda", teacher: "Kralova", room: "III.A" },
-    { hour: 4, time: "10:55-11:40", subject: "Telesna vychova", teacher: "Novak", room: "TV" },
-    { hour: 5, time: "11:50-12:35", subject: "Cesky jazyk", teacher: "Kralova", room: "III.A" },
-  ],
-  "Pa": [
-    { hour: 1, time: "8:00-8:45", subject: "Cesky jazyk", teacher: "Kralova", room: "III.A" },
-    { hour: 2, time: "8:55-9:40", subject: "Matematika", teacher: "Kralova", room: "III.A" },
-    { hour: 3, time: "10:00-10:45", subject: "Anglicky jazyk", teacher: "George", room: "JAZ1" },
-    { hour: 4, time: "10:55-11:40", subject: "Vlastiveda", teacher: "Kralova", room: "III.A" },
+const ATTENDANCE = {
+  summary: { present: 156, absent: 8, excused: 7, late: 3 },
+  recent: [
+    { date: "18.3.", status: "present", note: "" },
+    { date: "17.3.", status: "present", note: "" },
+    { date: "15.3.", status: "late", note: "Pozdní příchod 5 min" },
+    { date: "14.3.", status: "present", note: "" },
+    { date: "13.3.", status: "absent", note: "Omluveno – lékař" },
+    { date: "12.3.", status: "present", note: "" },
+    { date: "11.3.", status: "present", note: "" },
+    { date: "10.3.", status: "absent", note: "Omluveno – nemoc" },
   ],
 };
+
+const SCHEDULE = [
+  { time: "8:00", subject: "Matematika", teacher: "Mgr. Dvořák", room: "201" },
+  { time: "8:55", subject: "Český jazyk", teacher: "Mgr. Svobodová", room: "201" },
+  { time: "9:50", subject: "Angličtina", teacher: "Mgr. Malá", room: "305" },
+  { time: "10:55", subject: "Fyzika", teacher: "Ing. Horák", room: "Lab 1" },
+  { time: "11:50", subject: "Dějepis", teacher: "Mgr. Černý", room: "102" },
+  { time: "12:45", subject: "Tělesná výchova", teacher: "Mgr. Kolář", room: "Tělocvična" },
+];
 
 const SUBJECT_COLORS = {
-  "Matematika": "bg-blue-100 text-blue-800",
-  "Cesky jazyk": "bg-red-100 text-red-800",
-  "Anglicky jazyk": "bg-purple-100 text-purple-800",
-  "Prirodoveda": "bg-green-100 text-green-800",
-  "Vlastiveda": "bg-yellow-100 text-yellow-800",
-  "Telesna vychova": "bg-orange-100 text-orange-800",
-  "Hudebni vychova": "bg-pink-100 text-pink-800",
-  "Vytv. vychova": "bg-indigo-100 text-indigo-800",
-  "Informatika": "bg-cyan-100 text-cyan-800",
-  "Pracovni cin.": "bg-amber-100 text-amber-800",
+  Matematika: "bg-blue-100 text-blue-700 border-blue-200",
+  "Český jazyk": "bg-purple-100 text-purple-700 border-purple-200",
+  Angličtina: "bg-green-100 text-green-700 border-green-200",
+  Fyzika: "bg-orange-100 text-orange-700 border-orange-200",
+  Dějepis: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  Přírodopis: "bg-teal-100 text-teal-700 border-teal-200",
+  "Tělesná výchova": "bg-red-100 text-red-700 border-red-200",
 };
 
-// ============================================================
-// HELPER COMPONENTS
-// ============================================================
-const Badge = ({ children, color = "bg-gray-100 text-gray-700" }) => (
-  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${color}`}>
-    {children}
-  </span>
+const Badge = ({ children, color }) => (
+  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${color}`}>{children}</span>
 );
 
-const GradeBadge = ({ value }) => {
-  const colors = {
-    1: "bg-green-500", 2: "bg-green-400", 3: "bg-yellow-400", 4: "bg-orange-400", 5: "bg-red-500"
-  };
-  return (
-    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-white font-bold text-sm ${colors[value] || "bg-gray-400"}`}>
-      {value}
-    </span>
-  );
+const GradeBadge = ({ grade }) => {
+  const colors = { 1: "bg-green-100 text-green-700 border-green-300", 2: "bg-lime-100 text-lime-700 border-lime-300", 3: "bg-yellow-100 text-yellow-700 border-yellow-300", 4: "bg-orange-100 text-orange-700 border-orange-300", 5: "bg-red-100 text-red-700 border-red-300" };
+  return <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold border ${colors[grade] || "bg-gray-100 text-gray-700"}`}>{grade}</span>;
 };
 
 const Card = ({ children, className = "", onClick }) => (
-  <div className={`bg-white rounded-xl shadow-sm border border-gray-100 ${onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""} ${className}`} onClick={onClick}>
-    {children}
-  </div>
+  <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""} ${className}`} onClick={onClick}>{children}</div>
 );
 
-const StatCard = ({ icon: Icon, label, value, trend, trendLabel, color = "text-blue-600" }) => (
+const StatCard = ({ icon: Icon, label, value, color }) => (
   <Card className="p-4">
     <div className="flex items-center gap-3">
-      <div className={`p-2 rounded-lg bg-opacity-10 ${color === "text-blue-600" ? "bg-blue-100" : color === "text-green-600" ? "bg-green-100" : color === "text-orange-600" ? "bg-orange-100" : "bg-purple-100"}`}>
-        <Icon className={`w-5 h-5 ${color}`} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-gray-500 truncate">{label}</p>
-        <p className="text-lg font-bold text-gray-900">{value}</p>
-      </div>
-      {trend && (
-        <div className={`flex items-center gap-0.5 text-xs ${trend === "up" ? "text-green-600" : trend === "down" ? "text-red-500" : "text-gray-400"}`}>
-          {trend === "up" ? <TrendingUp className="w-3 h-3" /> : trend === "down" ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
-          <span>{trendLabel}</span>
-        </div>
-      )}
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}><Icon className="w-5 h-5" /></div>
+      <div><p className="text-2xl font-bold text-gray-900">{value}</p><p className="text-xs text-gray-500">{label}</p></div>
     </div>
   </Card>
 );
 
-const PageHeader = ({ title, subtitle, action }) => (
-  <div className="flex items-center justify-between mb-6">
-    <div>
-      <h1 className="text-xl font-bold text-gray-900">{title}</h1>
-      {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
-    </div>
-    {action}
+const PageHeader = ({ title, subtitle }) => (
+  <div className="mb-6">
+    <h1 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h1>
+    {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
   </div>
 );
 
-// ============================================================
-// MODULE: DASHBOARD
-// ============================================================
-const DashboardPage = ({ setPage }) => {
-  const unreadMsgs = MESSAGES.filter(m => m.unread).length;
-  const pendingHw = HOMEWORK.filter(h => !h.done).length;
-  const todayAbsent = ATTENDANCE[0].status;
-  const avgGrade = (GRADES.reduce((s, g) => s + g.avg, 0) / GRADES.length).toFixed(2);
+/* ==================== PAGES ==================== */
 
-  return (
+const DashboardPage = ({ setPage }) => (
+  <div className="space-y-6">
     <div>
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">Dobry den!</h1>
-        <p className="text-sm text-gray-500 mt-1">Prehled pro {STUDENT.name} &middot; {STUDENT.class}</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <StatCard icon={GraduationCap} label="Prumer znamek" value={avgGrade} trend="up" trendLabel="+0.1" color="text-blue-600" />
-        <StatCard icon={CalendarCheck} label="Dochazka" value="95%" trend="up" trendLabel="+2%" color="text-green-600" />
-        <StatCard icon={BookOpen} label="Nesplnene ukoly" value={pendingHw} color="text-orange-600" />
-        <StatCard icon={MessageSquare} label="Nove zpravy" value={unreadMsgs} color="text-purple-600" />
-      </div>
-
-      <Card className="p-4 mb-4">
+      <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dobrý den! 👋</h1>
+      <p className="text-sm text-gray-500 mt-1">{STUDENT.name} · {STUDENT.class} · {STUDENT.school}</p>
+    </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <StatCard icon={BarChart3} label="Průměr" value="1.67" color="bg-blue-50 text-blue-600" />
+      <StatCard icon={ClipboardList} label="Úkoly" value="3" color="bg-orange-50 text-orange-600" />
+      <StatCard icon={MessageSquare} label="Nové zprávy" value="2" color="bg-purple-50 text-purple-600" />
+      <StatCard icon={Clock} label="Docházka" value="95%" color="bg-green-50 text-green-600" />
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900 text-sm">Dnesni rozvrh</h2>
-          <button onClick={() => setPage("schedule")} className="text-xs text-blue-600 font-medium">Cely rozvrh</button>
+          <h2 className="font-semibold text-gray-900 text-sm">Dnešní rozvrh</h2>
+          <button onClick={() => setPage("schedule")} className="text-xs text-blue-600 font-medium">Celý rozvrh</button>
         </div>
-        {SCHEDULE["Ut"].slice(0, 3).map((item, i) => (
-          <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-            <span className="text-xs text-gray-400 w-12">{item.time.split("-")[0]}</span>
-            <Badge color={SUBJECT_COLORS[item.subject] || "bg-gray-100 text-gray-700"}>{item.subject}</Badge>
-            <span className="text-xs text-gray-400 ml-auto">{item.room}</span>
-          </div>
-        ))}
-        <div className="text-center mt-2">
-          <span className="text-xs text-gray-400">+ dalsi {SCHEDULE["Ut"].length - 3} hodiny</span>
-        </div>
-      </Card>
-
-      <Card className="p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900 text-sm">Posledni znamky</h2>
-          <button onClick={() => setPage("grades")} className="text-xs text-blue-600 font-medium">Vsechny</button>
-        </div>
-        {GRADES.slice(0, 3).map((g, i) => (
-          <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-            <GradeBadge value={g.grades[0].value} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">{g.subject}</p>
-              <p className="text-xs text-gray-400">{g.grades[0].label} &middot; {g.grades[0].date}</p>
+        <div className="space-y-2">
+          {SCHEDULE.slice(0, 4).map((s, i) => (
+            <div key={i} className="flex items-center gap-3 py-1.5">
+              <span className="text-xs text-gray-400 w-10 flex-shrink-0">{s.time}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full border ${SUBJECT_COLORS[s.subject] || "bg-gray-100 text-gray-600"}`}>{s.subject}</span>
+              <span className="text-xs text-gray-400 ml-auto hidden sm:inline">{s.room}</span>
             </div>
-            <span className="text-xs text-gray-400">prumer {g.avg.toFixed(1)}</span>
-          </div>
-        ))}
-      </Card>
-
-      <Card className="p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900 text-sm">Ukoly k odevzdani</h2>
-          <button onClick={() => setPage("homework")} className="text-xs text-blue-600 font-medium">Vsechny</button>
+          ))}
         </div>
+      </Card>
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-gray-900 text-sm">Poslední známky</h2>
+          <button onClick={() => setPage("grades")} className="text-xs text-blue-600 font-medium">Všechny</button>
+        </div>
+        <div className="space-y-2">
+          {GRADES.slice(0, 4).map((g, i) => (
+            <div key={i} className="flex items-center justify-between py-1.5">
+              <div>
+                <p className="text-sm font-medium text-gray-900">{g.subject}</p>
+                <p className="text-xs text-gray-400">{g.type}</p>
+              </div>
+              <GradeBadge grade={g.grade} />
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+    <Card className="p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-semibold text-gray-900 text-sm">Úkoly k odevzdání</h2>
+        <button onClick={() => setPage("homework")} className="text-xs text-blue-600 font-medium">Všechny</button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {HOMEWORK.filter(h => !h.done).slice(0, 3).map((h, i) => (
-          <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-            <div className="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center">
+          <div key={i} className="flex items-center gap-3 py-2 px-3 bg-gray-50 rounded-lg">
+            <div className="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center flex-shrink-0">
               {h.done && <Check className="w-3 h-3 text-green-600" />}
             </div>
             <div className="flex-1 min-w-0">
@@ -243,360 +155,204 @@ const DashboardPage = ({ setPage }) => {
             <Badge color="bg-orange-100 text-orange-700">do {h.due}</Badge>
           </div>
         ))}
+      </div>
+    </Card>
+  </div>
+);
+
+const MessagesPage = () => {
+  const [selected, setSelected] = useState(null);
+  const selectedMsg = MESSAGES.find(m => m.id === selected);
+  return (
+    <div>
+      <PageHeader title="Zprávy" subtitle={`${MESSAGES.filter(m => m.unread).length} nepřečtené`} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className={`space-y-2 ${selected ? "hidden lg:block" : ""} lg:col-span-1`}>
+          {MESSAGES.map(m => (
+            <Card key={m.id} className={`p-4 ${m.unread ? "border-l-4 border-l-blue-500" : ""} ${selected === m.id ? "ring-2 ring-blue-500" : ""}`} onClick={() => setSelected(m.id)}>
+              <div className="flex items-start justify-between mb-1">
+                <p className={`text-sm ${m.unread ? "font-semibold text-gray-900" : "text-gray-700"}`}>{m.from}</p>
+                <span className="text-xs text-gray-400 flex-shrink-0 ml-2">{m.time}</span>
+              </div>
+              <p className="text-sm font-medium text-gray-800">{m.subject}</p>
+              <p className="text-xs text-gray-400 mt-1 truncate">{m.preview}</p>
+            </Card>
+          ))}
+        </div>
+        <div className={`${selected ? "block" : "hidden lg:block"} lg:col-span-2`}>
+          {selectedMsg ? (
+            <Card className="p-6">
+              <button onClick={() => setSelected(null)} className="text-sm text-blue-600 mb-4 lg:hidden">← Zpět na zprávy</button>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">{selectedMsg.subject}</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold">{selectedMsg.from[0]}</div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{selectedMsg.from}</p>
+                  <p className="text-xs text-gray-400">{selectedMsg.time}</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed">{selectedMsg.body}</p>
+            </Card>
+          ) : (
+            <Card className="p-12 flex items-center justify-center">
+              <div className="text-center text-gray-400">
+                <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">Vyberte zprávu pro zobrazení</p>
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const HomeworkPage = () => (
+  <div>
+    <PageHeader title="Úkoly" subtitle={`${HOMEWORK.filter(h => !h.done).length} nesplněné`} />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {HOMEWORK.map(h => (
+        <Card key={h.id} className={`p-4 ${h.done ? "opacity-60" : ""}`}>
+          <div className="flex items-start gap-3">
+            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${h.done ? "border-green-500 bg-green-50" : "border-gray-300"}`}>
+              {h.done && <Check className="w-4 h-4 text-green-600" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className={`text-sm font-medium ${h.done ? "line-through text-gray-400" : "text-gray-900"}`}>{h.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{h.subject}</p>
+                </div>
+                <Badge color={h.done ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>{h.done ? "Hotovo" : `do ${h.due}`}</Badge>
+              </div>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  </div>
+);
+
+const AttendancePage = () => {
+  const { summary, recent } = ATTENDANCE;
+  const statusMap = { present: { label: "Přítomen", color: "bg-green-100 text-green-700", dot: "bg-green-500" }, absent: { label: "Nepřítomen", color: "bg-red-100 text-red-700", dot: "bg-red-500" }, late: { label: "Pozdě", color: "bg-yellow-100 text-yellow-700", dot: "bg-yellow-500" } };
+  return (
+    <div>
+      <PageHeader title="Docházka" subtitle="Přehled docházky" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <Card className="p-4 text-center"><p className="text-2xl font-bold text-green-600">{summary.present}</p><p className="text-xs text-gray-500">Přítomen</p></Card>
+        <Card className="p-4 text-center"><p className="text-2xl font-bold text-red-600">{summary.absent}</p><p className="text-xs text-gray-500">Absence</p></Card>
+        <Card className="p-4 text-center"><p className="text-2xl font-bold text-blue-600">{summary.excused}</p><p className="text-xs text-gray-500">Omluveno</p></Card>
+        <Card className="p-4 text-center"><p className="text-2xl font-bold text-yellow-600">{summary.late}</p><p className="text-xs text-gray-500">Pozdě</p></Card>
+      </div>
+      <Card>
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="font-semibold text-gray-900 text-sm">Poslední záznamy</h2>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {recent.map((r, i) => {
+            const s = statusMap[r.status];
+            return (
+              <div key={i} className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-2.5 h-2.5 rounded-full ${s.dot}`}></div>
+                  <span className="text-sm text-gray-700 w-14">{r.date}</span>
+                  <Badge color={s.color}>{s.label}</Badge>
+                </div>
+                {r.note && <span className="text-xs text-gray-400 hidden sm:inline">{r.note}</span>}
+              </div>
+            );
+          })}
+        </div>
       </Card>
     </div>
   );
 };
 
-// ============================================================
-// MODULE: MESSAGES
-// ============================================================
-const MessagesPage = () => {
-  const [selected, setSelected] = useState(null);
-  const [composing, setComposing] = useState(false);
-
-  if (composing) {
-    return (
-      <div>
-        <div className="flex items-center gap-3 mb-4">
-          <button onClick={() => setComposing(false)} className="p-1"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-          <h1 className="text-lg font-bold text-gray-900">Nova zprava</h1>
-        </div>
-        <Card className="p-4">
-          <div className="mb-3">
-            <label className="text-xs text-gray-500 block mb-1">Komu</label>
-            <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
-              <option>Mgr. Kralova - Tridni ucitelka</option>
-              <option>Mr. George - Ucitel AJ</option>
-              <option>Vedeni skoly</option>
-            </select>
-          </div>
-          <div className="mb-3">
-            <label className="text-xs text-gray-500 block mb-1">Predmet</label>
-            <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="Zadejte predmet zpravy..." />
-          </div>
-          <div className="mb-3">
-            <label className="text-xs text-gray-500 block mb-1">Zprava</label>
-            <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm h-32 resize-none" placeholder="Napiste zpravu..." />
-          </div>
-          <div className="flex items-center justify-between">
-            <button className="flex items-center gap-2 text-gray-400 text-sm"><Paperclip className="w-4 h-4" /> Priloha</button>
-            <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"><Send className="w-4 h-4" /> Odeslat</button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  if (selected !== null) {
-    const msg = MESSAGES[selected];
-    return (
-      <div>
-        <div className="flex items-center gap-3 mb-4">
-          <button onClick={() => setSelected(null)} className="p-1"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-          <h1 className="text-lg font-bold text-gray-900 truncate">{msg.subject}</h1>
-        </div>
-        <Card className="p-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">{msg.avatar}</div>
-            <div>
-              <p className="font-medium text-gray-900 text-sm">{msg.from}</p>
-              <p className="text-xs text-gray-400">{msg.role} &middot; {msg.time}</p>
-            </div>
-          </div>
-          <div className="text-sm text-gray-700 leading-relaxed">
-            <p>Dobry den, vazeni rodice,</p>
-            <br />
-            <p>posilam vam prehled akci na brezen. Prosim, zkontrolujte, zda vase dite ma vsechny potrebne veci.</p>
-            <br />
-            <p><b>Akce na brezen:</b></p>
-            <p>&bull; 25.3. - Foceni trid (ve skole)</p>
-            <p>&bull; 27.3. - Skolni vychazka do parku</p>
-            <p>&bull; 31.3. - Filharmonie Brno, odchod 9:00</p>
-            <br />
-            <p>S pozdravem,</p>
-            <p>Mgr. Kralova</p>
-          </div>
-        </Card>
-        <div className="mt-4">
-          <Card className="p-4">
-            <textarea className="w-full border-0 text-sm resize-none h-16 focus:outline-none" placeholder="Napiste odpoved..." />
-            <div className="flex justify-end">
-              <button className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium"><Send className="w-3 h-3" /> Odpovedet</button>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
+const GradesPage = () => {
+  const subjects = [...new Set(GRADES.map(g => g.subject))];
+  const avg = (GRADES.reduce((a, g) => a + g.grade * g.weight, 0) / GRADES.reduce((a, g) => a + g.weight, 0)).toFixed(2);
   return (
     <div>
-      <PageHeader
-        title="Zpravy"
-        subtitle={`${MESSAGES.filter(m => m.unread).length} neprectenych`}
-        action={<button onClick={() => setComposing(true)} className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-medium"><Plus className="w-3 h-3" /> Nova</button>}
-      />
-      <div className="space-y-2">
-        {MESSAGES.map((msg, i) => (
-          <Card key={msg.id} className={`p-4 ${msg.unread ? "border-l-4 border-l-blue-500" : ""}`} onClick={() => setSelected(i)}>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm flex-shrink-0">{msg.avatar}</div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <p className={`text-sm ${msg.unread ? "font-bold text-gray-900" : "font-medium text-gray-700"}`}>{msg.from}</p>
-                  <span className="text-xs text-gray-400 flex-shrink-0">{msg.time}</span>
-                </div>
-                <p className={`text-sm ${msg.unread ? "font-semibold text-gray-800" : "text-gray-600"}`}>{msg.subject}</p>
-                <p className="text-xs text-gray-400 truncate mt-0.5">{msg.preview}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ============================================================
-// MODULE: HOMEWORK
-// ============================================================
-const HomeworkPage = () => {
-  const [hw, setHw] = useState(HOMEWORK);
-  const [filter, setFilter] = useState("pending");
-
-  const toggleDone = (id) => setHw(hw.map(h => h.id === id ? { ...h, done: !h.done } : h));
-  const filtered = filter === "pending" ? hw.filter(h => !h.done) : filter === "done" ? hw.filter(h => h.done) : hw;
-
-  return (
-    <div>
-      <PageHeader title="Ukoly a vyukove plany" subtitle="Domaci ukoly a priprava" />
-      <div className="flex gap-2 mb-4">
-        {[["pending", "Nesplnene"], ["done", "Splnene"], ["all", "Vsechny"]].map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filter === key ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      <div className="space-y-2">
-        {filtered.map(h => (
-          <Card key={h.id} className="p-4">
-            <div className="flex items-start gap-3">
-              <button onClick={() => toggleDone(h.id)} className={`w-6 h-6 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${h.done ? "bg-green-500 border-green-500" : "border-gray-300 hover:border-blue-400"}`}>
-                {h.done && <Check className="w-4 h-4 text-white" />}
-              </button>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge color={SUBJECT_COLORS[h.subject] || "bg-gray-100 text-gray-700"}>{h.subject}</Badge>
-                  {!h.done && <Badge color="bg-orange-100 text-orange-700">do {h.due}</Badge>}
-                  {h.done && <Badge color="bg-green-100 text-green-700">Splneno</Badge>}
-                </div>
-                <p className={`text-sm ${h.done ? "text-gray-400 line-through" : "font-medium text-gray-900"}`}>{h.title}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{h.teacher}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ============================================================
-// MODULE: ATTENDANCE
-// ============================================================
-const AttendancePage = () => {
-  const [showForm, setShowForm] = useState(false);
-  const statusMap = {
-    present: { label: "Pritomen/a", color: "bg-green-100 text-green-700", icon: Check },
-    absent: { label: "Nepritomen/a", color: "bg-red-100 text-red-700", icon: X },
-    late: { label: "Pozde", color: "bg-yellow-100 text-yellow-700", icon: AlertCircle },
-  };
-  const totalDays = ATTENDANCE.length;
-  const presentDays = ATTENDANCE.filter(a => a.status === "present").length;
-  const absentDays = ATTENDANCE.filter(a => a.status === "absent").length;
-
-  return (
-    <div>
-      <PageHeader
-        title="Dochazka"
-        subtitle="Brezen 2026"
-        action={<button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-medium"><Plus className="w-3 h-3" /> Omluvit</button>}
-      />
-
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <Card className="p-3 text-center">
-          <p className="text-xl font-bold text-green-600">{presentDays}</p>
-          <p className="text-xs text-gray-500">Pritomen/a</p>
-        </Card>
-        <Card className="p-3 text-center">
-          <p className="text-xl font-bold text-red-500">{absentDays}</p>
-          <p className="text-xs text-gray-500">Nepritomen/a</p>
-        </Card>
-        <Card className="p-3 text-center">
-          <p className="text-xl font-bold text-blue-600">{Math.round(presentDays / totalDays * 100)}%</p>
-          <p className="text-xs text-gray-500">Dochazka</p>
-        </Card>
-      </div>
-
-      {showForm && (
-        <Card className="p-4 mb-4 border-blue-200 bg-blue-50">
-          <h3 className="font-semibold text-sm text-gray-900 mb-3">Omluvit absenci</h3>
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <input type="date" className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm" />
-              <input type="date" className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm" />
-            </div>
-            <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
-              <option>Nemoc</option>
-              <option>Rodinne duvody</option>
-              <option>Lekar</option>
-              <option>Jiny duvod</option>
-            </select>
-            <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm h-16 resize-none" placeholder="Poznamka (nepovinne)..." />
-            <div className="flex gap-2">
-              <button onClick={() => setShowForm(false)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg text-sm font-medium">Zrusit</button>
-              <button onClick={() => setShowForm(false)} className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium">Odeslat omluvenku</button>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      <div className="space-y-2">
-        {ATTENDANCE.map((a, i) => {
-          const s = statusMap[a.status];
-          const Icon = s.icon;
+      <PageHeader title="Známky" subtitle={`Celkový průměr: ${avg}`} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+        {subjects.map(sub => {
+          const subGrades = GRADES.filter(g => g.subject === sub);
+          const subAvg = (subGrades.reduce((a, g) => a + g.grade * g.weight, 0) / subGrades.reduce((a, g) => a + g.weight, 0)).toFixed(2);
           return (
-            <Card key={i} className="p-3">
-              <div className="flex items-center gap-3">
-                <div className="text-center w-10">
-                  <p className="text-xs text-gray-400">{a.day}</p>
-                  <p className="font-bold text-sm text-gray-900">{a.date.split(".")[0]}</p>
-                </div>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center ${s.color}`}>
-                  <Icon className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{s.label}</p>
-                  {a.note && <p className="text-xs text-gray-400">{a.note}</p>}
-                </div>
-                <span className="text-xs text-gray-400">{a.hours}</span>
+            <Card key={sub} className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-xs px-2 py-0.5 rounded-full border ${SUBJECT_COLORS[sub] || "bg-gray-100"}`}>{sub}</span>
+                <span className="text-lg font-bold text-gray-900">{subAvg}</span>
+              </div>
+              <div className="flex gap-1.5 flex-wrap">
+                {subGrades.map((g, i) => <GradeBadge key={i} grade={g.grade} />)}
               </div>
             </Card>
           );
         })}
       </div>
-    </div>
-  );
-};
-
-// ============================================================
-// MODULE: GRADES
-// ============================================================
-const GradesPage = () => {
-  const [expanded, setExpanded] = useState(null);
-
-  return (
-    <div>
-      <PageHeader title="Hodnoceni" subtitle="Skolni rok 2025/2026" />
-      <div className="space-y-3">
-        {GRADES.map((g, i) => (
-          <Card key={i} className="overflow-hidden">
-            <button onClick={() => setExpanded(expanded === i ? null : i)} className="w-full p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">{g.abbr}</div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="font-medium text-gray-900 text-sm">{g.subject}</p>
-                <p className="text-xs text-gray-400">{g.grades.length} znamek</p>
-              </div>
-              <div className="text-right mr-2">
-                <p className={`text-lg font-bold ${g.avg <= 1.5 ? "text-green-600" : g.avg <= 2.5 ? "text-green-500" : g.avg <= 3.5 ? "text-yellow-500" : "text-red-500"}`}>{g.avg.toFixed(1)}</p>
-                <p className="text-xs text-gray-400">prumer</p>
-              </div>
-              {expanded === i ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-            </button>
-            {expanded === i && (
-              <div className="px-4 pb-4 border-t border-gray-50">
-                <div className="flex gap-1 mt-3 mb-3">
-                  {g.grades.map((gr, j) => (
-                    <div key={j} className="flex-1 bg-gray-50 rounded-lg p-2 text-center">
-                      <GradeBadge value={gr.value} />
-                      <p className="text-xs text-gray-500 mt-1">{gr.label}</p>
-                      <p className="text-xs text-gray-300">{gr.date}</p>
-                    </div>
-                  ))}
+      <Card>
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="font-semibold text-gray-900 text-sm">Všechny známky</h2>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {GRADES.map((g, i) => (
+            <div key={i} className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <GradeBadge grade={g.grade} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900">{g.subject}</p>
+                  <p className="text-xs text-gray-400">{g.type} · Váha {g.weight}</p>
                 </div>
               </div>
-            )}
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ============================================================
-// MODULE: SCHEDULE
-// ============================================================
-const SchedulePage = () => {
-  const days = ["Po", "Ut", "St", "Ct", "Pa"];
-  const [activeDay, setActiveDay] = useState("Ut");
-
-  return (
-    <div>
-      <PageHeader title="Rozvrh hodin" subtitle={`${STUDENT.class} - ${STUDENT.name}`} />
-      <div className="flex gap-1 mb-4 bg-gray-100 rounded-xl p-1">
-        {days.map(d => (
-          <button
-            key={d}
-            onClick={() => setActiveDay(d)}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${activeDay === d ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            {d}
-            {d === "Ut" && <span className="block text-xs font-normal text-blue-400">dnes</span>}
-          </button>
-        ))}
-      </div>
-      <div className="space-y-2">
-        {(SCHEDULE[activeDay] || []).map((item, i) => (
-          <Card key={i} className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="text-center w-12">
-                <p className="text-lg font-bold text-gray-900">{item.hour}.</p>
-                <p className="text-xs text-gray-400">{item.time.split("-")[0]}</p>
-              </div>
-              <div className={`w-1 h-10 rounded-full ${i % 2 === 0 ? "bg-blue-400" : "bg-purple-400"}`} />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm">{item.subject}</p>
-                <p className="text-xs text-gray-400">{item.teacher} &middot; ucem. {item.room}</p>
-              </div>
-              <span className="text-xs text-gray-300">{item.time.split("-")[1]}</span>
+              <span className="text-xs text-gray-400 flex-shrink-0">{g.date}</span>
             </div>
-          </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 };
 
-// ============================================================
-// MAIN APP
-// ============================================================
+const SchedulePage = () => (
+  <div>
+    <PageHeader title="Rozvrh" subtitle="Pondělí 18. března" />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {SCHEDULE.map((s, i) => (
+        <Card key={i} className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="text-center flex-shrink-0 w-14">
+              <p className="text-lg font-bold text-gray-900">{s.time}</p>
+              <p className="text-xs text-gray-400">{i + 1}. hod</p>
+            </div>
+            <div className="w-px h-10 bg-gray-200"></div>
+            <div className="flex-1">
+              <p className={`text-sm font-medium px-2 py-0.5 rounded-full inline-block border ${SUBJECT_COLORS[s.subject] || "bg-gray-100"}`}>{s.subject}</p>
+              <p className="text-xs text-gray-400 mt-1">{s.teacher} · {s.room}</p>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  </div>
+);
+
+/* ==================== MAIN APP ==================== */
+
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Prehled", icon: Home },
-  { id: "messages", label: "Zpravy", icon: MessageSquare, badge: 2 },
-  { id: "homework", label: "Ukoly", icon: BookOpen },
-  { id: "attendance", label: "Dochazka", icon: CalendarCheck },
-  { id: "grades", label: "Znamky", icon: GraduationCap },
+  { id: "dashboard", label: "Přehled", icon: Home },
+  { id: "messages", label: "Zprávy", icon: MessageSquare },
+  { id: "homework", label: "Úkoly", icon: ClipboardList },
+  { id: "attendance", label: "Docházka", icon: Calendar },
+  { id: "grades", label: "Známky", icon: BarChart3 },
   { id: "schedule", label: "Rozvrh", icon: Clock },
 ];
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const unread = MESSAGES.filter(m => m.unread).length;
 
   const renderPage = () => {
     switch (page) {
@@ -611,52 +367,115 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col" style={{ maxWidth: 480, margin: "0 auto", position: "relative" }}>
-      {/* Top Bar */}
-      <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-gray-900" style={{ letterSpacing: "-0.02em" }}>EduConnect</h1>
-            <p className="text-xs text-gray-400">{STUDENT.class} &middot; {STUDENT.name}</p>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex md:w-64 lg:w-72 flex-col bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-30">
+        <div className="p-5 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
+              <GraduationCap className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">EduConnect</h1>
+              <p className="text-xs text-gray-400">Školní informační systém</p>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="relative p-2 text-gray-400 hover:text-gray-600">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
+        <div className="p-3 border-b border-gray-100">
+          <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
+            <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-bold">{STUDENT.avatar}</div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">{STUDENT.name}</p>
+              <p className="text-xs text-gray-400">{STUDENT.class} · {STUDENT.school}</p>
+            </div>
+          </div>
         </div>
-      </header>
+        <nav className="flex-1 p-3 space-y-1">
+          {NAV_ITEMS.map(item => (
+            <button key={item.id} onClick={() => setPage(item.id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${page === item.id ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}>
+              <item.icon className="w-5 h-5" />
+              <span>{item.label}</span>
+              {item.id === "messages" && unread > 0 && <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{unread}</span>}
+            </button>
+          ))}
+        </nav>
+      </aside>
 
-      {/* Content */}
-      <main className="flex-1 px-4 py-4 pb-24 overflow-y-auto">
-        {renderPage()}
-      </main>
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)}></div>
+          <aside className="absolute inset-y-0 left-0 w-72 bg-white shadow-xl">
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6 text-white" />
+                </div>
+                <h1 className="text-lg font-bold text-gray-900">EduConnect</h1>
+              </div>
+              <button onClick={() => setSidebarOpen(false)}><X className="w-6 h-6 text-gray-400" /></button>
+            </div>
+            <nav className="p-3 space-y-1">
+              {NAV_ITEMS.map(item => (
+                <button key={item.id} onClick={() => { setPage(item.id); setSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${page === item.id ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50"}`}>
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                  {item.id === "messages" && unread > 0 && <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{unread}</span>}
+                </button>
+              ))}
+            </nav>
+          </aside>
+        </div>
+      )}
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-30" style={{ maxWidth: 480, margin: "0 auto" }}>
-        <div className="flex items-center justify-around py-1">
-          {NAV_ITEMS.map(item => {
-            const Icon = item.icon;
-            const active = page === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setPage(item.id)}
-                className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-lg transition-colors relative ${active ? "text-blue-600" : "text-gray-400 hover:text-gray-600"}`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-xs font-medium">{item.label}</span>
-                {item.badge && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">{item.badge}</span>
-                )}
-                {active && <span className="absolute -bottom-1 w-6 h-0.5 bg-blue-600 rounded-full" />}
+      {/* Main Content */}
+      <div className="flex-1 md:ml-64 lg:ml-72">
+        {/* Top Header */}
+        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+          <div className="flex items-center justify-between px-4 py-3 md:px-6">
+            <div className="flex items-center gap-3">
+              <button className="md:hidden" onClick={() => setSidebarOpen(true)}>
+                <Menu className="w-6 h-6 text-gray-600" />
               </button>
-            );
-          })}
+              <div className="md:hidden flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+                  <GraduationCap className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-bold text-gray-900">EduConnect</span>
+              </div>
+              <h2 className="hidden md:block text-lg font-semibold text-gray-900">{NAV_ITEMS.find(n => n.id === page)?.label || "Přehled"}</h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors" onClick={() => setPage("messages")}>
+                <Bell className="w-5 h-5 text-gray-500" />
+                {unread > 0 && <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">{unread}</span>}
+              </button>
+              <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-gray-200">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold">{STUDENT.avatar}</div>
+                <span className="text-sm font-medium text-gray-700">{STUDENT.name}</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+          {renderPage()}
+        </main>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 md:hidden">
+        <div className="flex justify-around py-2">
+          {NAV_ITEMS.slice(0, 5).map(item => (
+            <button key={item.id} onClick={() => setPage(item.id)} className={`flex flex-col items-center gap-0.5 px-2 py-1 min-w-0 ${page === item.id ? "text-blue-600" : "text-gray-400"}`}>
+              <div className="relative">
+                <item.icon className="w-5 h-5" />
+                {item.id === "messages" && unread > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-3.5 h-3.5 flex items-center justify-center" style={{ fontSize: 9 }}>{unread}</span>}
+              </div>
+              <span className="text-xs">{item.label}</span>
+            </button>
+          ))}
         </div>
       </nav>
     </div>
